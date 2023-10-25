@@ -22,7 +22,15 @@ jobs:
         go-version: '1.21'
 
     - name: Build
-      run: go build -v ./...
-
+      run: go build
+      
     - name: Test
       run: go test -v ./...
+
+    - name: BuildRelease
+      run: GOOS=linux GOARCH=amd64 go build -o webIdentityCredentialProcessLinuxAmd64  -v creds.go
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: LinuxAmd64
+        path: webIdentityCredentialProcessLinuxAmd64
