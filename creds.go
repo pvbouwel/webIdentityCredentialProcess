@@ -33,8 +33,17 @@ func NewCredentialResponse(cred types.Credentials) (response *CredentialResponse
 	return response
 }
 
+// OS environment variables
+const WEB_IDENTITY_DURATION = "WEB_IDENTITY_DURATION"
+const AWS_WEB_IDENTITY_SESSION_NAME = "AWS_WEB_IDENTITY_SESSION_NAME"
+const AWS_ROLE_ARN = "AWS_ROLE_ARN"
+const AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION"
+const AWS_WEB_IDENTITY_TOKEN_FILE = "AWS_WEB_IDENTITY_TOKEN_FILE"
+const WEB_IDENTITY_PROVIDER_ID = "WEB_IDENTITY_PROVIDER_ID"
+const WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE = "WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE"
+
 func getWebIdentityDuration() (duration *int32) {
-	webIdentityDuration, hasWebIdentityDuration := os.LookupEnv("WEB_IDENTITY_DURATION")
+	webIdentityDuration, hasWebIdentityDuration := os.LookupEnv(WEB_IDENTITY_DURATION)
 	if !hasWebIdentityDuration {
 		// Default to 3600
 		return aws.Int32(3600)
@@ -42,13 +51,13 @@ func getWebIdentityDuration() (duration *int32) {
 
 	i64, err := strconv.ParseInt(webIdentityDuration, 10, 32)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid value for WEB_IDENTITY_DURATION %s", webIdentityDuration)
+		fmt.Fprintf(os.Stderr, "Invalid value for %s %s", WEB_IDENTITY_DURATION, webIdentityDuration)
 	}
 	return aws.Int32(int32(i64))
 }
 
 func getWebIdentitySessionName() (sessionName *string) {
-	awsWebIdenitySessionName, hasAwsWebIdenitySessionName := os.LookupEnv("AWS_WEB_IDENTITY_SESSION_NAME")
+	awsWebIdenitySessionName, hasAwsWebIdenitySessionName := os.LookupEnv(AWS_WEB_IDENTITY_SESSION_NAME)
 	if !hasAwsWebIdenitySessionName {
 		return aws.String("webIdenityCredentialProcess")
 	}
@@ -56,17 +65,17 @@ func getWebIdentitySessionName() (sessionName *string) {
 }
 
 func getWebIdentityRoleArn() (role_arn *string) {
-	awsRoleArn, hasAwsRoleArn := os.LookupEnv("AWS_ROLE_ARN")
+	awsRoleArn, hasAwsRoleArn := os.LookupEnv(AWS_ROLE_ARN)
 	if !hasAwsRoleArn {
-		failWithMessage("AWS_ROLE_ARN is a mandatory OS environment variable.")
+		failWithMessage(fmt.Sprintf("%s is a mandatory OS environment variable.", AWS_ROLE_ARN))
 	}
 	return aws.String(awsRoleArn)
 }
 
 func getAwsDefaultRegion() (default_region string) {
-	awsDefaultRegion, hasAwsDefaultRegion := os.LookupEnv("AWS_DEFAULT_REGION")
+	awsDefaultRegion, hasAwsDefaultRegion := os.LookupEnv(AWS_DEFAULT_REGION)
 	if !hasAwsDefaultRegion {
-		failWithMessage("AWS_DEFAULT_REGION is a mandatory OS environment variable.")
+		failWithMessage(fmt.Sprintf("%s is a mandatory OS environment variable.", AWS_DEFAULT_REGION))
 	}
 	return awsDefaultRegion
 
@@ -78,13 +87,13 @@ func failWithMessage(msg string) {
 }
 
 func getWebIdentityToken() (token *string) {
-	awsWebIdentityTokenFile, hasAwsWebIdentityTokenFile := os.LookupEnv("AWS_WEB_IDENTITY_TOKEN_FILE")
+	awsWebIdentityTokenFile, hasAwsWebIdentityTokenFile := os.LookupEnv(AWS_WEB_IDENTITY_TOKEN_FILE)
 	if !hasAwsWebIdentityTokenFile {
-		failWithMessage("AWS_WEB_IDENTITY_TOKEN_FILE is a mandatory OS environment variable.")
+		failWithMessage(fmt.Sprintf("%s is a mandatory OS environment variable.", AWS_WEB_IDENTITY_TOKEN_FILE))
 	}
 	awsWebIdentityTokenFileHandle, err := os.Open(awsWebIdentityTokenFile)
 	if err != nil {
-		failWithMessage("AWS_WEB_IDENTITY_TOKEN_FILE must point to an existing file.")
+		failWithMessage(fmt.Sprintf("%s must point to an existing file.", AWS_WEB_IDENTITY_TOKEN_FILE))
 	}
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer awsWebIdentityTokenFileHandle.Close()
@@ -101,7 +110,7 @@ func getCredentialsUsingWebIdentityToken() (response *CredentialResponse, err er
 		WebIdentityToken: getWebIdentityToken(),
 		RoleSessionName:  getWebIdentitySessionName(),
 	}
-	web_idenity_provider_id, has_web_identity_provider_id := os.LookupEnv("WEB_IDENTITY_PROVIDER_ID")
+	web_idenity_provider_id, has_web_identity_provider_id := os.LookupEnv(WEB_IDENTITY_PROVIDER_ID)
 	if has_web_identity_provider_id {
 		input.ProviderId = aws.String(web_idenity_provider_id)
 	}
@@ -133,11 +142,11 @@ func getAwsDir() (awsDir string, err error) {
 }
 
 func getCredsFilename() (filename string) {
-	webIdentityCredentialProcessCacheFile, haswebIdentityCredentialProcessCacheFile := os.LookupEnv("WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE")
+	webIdentityCredentialProcessCacheFile, haswebIdentityCredentialProcessCacheFile := os.LookupEnv(WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE)
 	if !haswebIdentityCredentialProcessCacheFile {
 		dirname, err := getAwsDir()
 		if err != nil {
-			failWithMessage(fmt.Sprintf("Could not get home dir %s and WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE not provided.\n", err))
+			failWithMessage(fmt.Sprintf("Could not get home dir %s and %s not provided.\n", err, WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE))
 		}
 		return fmt.Sprintf("%s/%s", dirname, ".webIdentityCredentialProcess.json")
 	}
