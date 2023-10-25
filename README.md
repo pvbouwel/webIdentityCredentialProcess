@@ -1,6 +1,8 @@
 # webIdentityCredentialProcess
 
 A process that allows to perform credential vending based out of token files.
+Credentials are returned in AWS Credential process format on stdout.
+All logging of the credential process goes to stderr.
 
 Mandatory environment variables:
 ```sh
@@ -15,7 +17,10 @@ export AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE="/path/to/file/where/you/w
 export AWS_WEB_IDENTITY_DURATION=3600
 export AWS_WEB_IDENTITY_PROVIDER_ID="..." # For providers that reqiure specifying that (see AWS docs on assumeRoleWithWebIdentity)
 export AWS_WEB_IDENTITY_SESSION_NAME="..."
+export AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_LOG_LEVEL="DEBUG
 ```
+
+
 
 # Common issues
 
