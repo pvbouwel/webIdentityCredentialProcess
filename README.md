@@ -4,17 +4,17 @@ A process that allows to perform credential vending based out of token files.
 
 Mandatory environment variables:
 ```sh
+export AWS_DEFAULT_REGION="eu-west-1"
 export AWS_ROLE_ARN="..."
 export AWS_WEB_IDENTITY_TOKEN_FILE="/path/to/your/token"
-export AWS_DEFAULT_REGION="eu-west-1"
 ```
 
 Optional environment variables:
 ```sh
-export WEB_IDENTITY_DURATION=3600
-export WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE="/path/to/file/where/you/want/to/cache/credentials"
+export AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE="/path/to/file/where/you/want/to/cache/credentials"
+export AWS_WEB_IDENTITY_DURATION=3600
+export AWS_WEB_IDENTITY_PROVIDER_ID="..." # For providers that reqiure specifying that (see AWS docs on assumeRoleWithWebIdentity)
 export AWS_WEB_IDENTITY_SESSION_NAME="..."
-export WEB_IDENTITY_PROVIDER_ID="..." # For providers that reqiure specifying that (see AWS docs on assumeRoleWithWebIdentity)
 ```
 
 # Common issues

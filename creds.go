@@ -34,16 +34,16 @@ func NewCredentialResponse(cred types.Credentials) (response *CredentialResponse
 }
 
 // OS environment variables
-const WEB_IDENTITY_DURATION = "WEB_IDENTITY_DURATION"
-const AWS_WEB_IDENTITY_SESSION_NAME = "AWS_WEB_IDENTITY_SESSION_NAME"
-const AWS_ROLE_ARN = "AWS_ROLE_ARN"
 const AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION"
+const AWS_ROLE_ARN = "AWS_ROLE_ARN"
+const AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE = "AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE"
+const AWS_WEB_IDENTITY_DURATION = "AWS_WEB_IDENTITY_DURATION"
+const AWS_WEB_IDENTITY_PROVIDER_ID = "AWS_WEB_IDENTITY_PROVIDER_ID"
+const AWS_WEB_IDENTITY_SESSION_NAME = "AWS_WEB_IDENTITY_SESSION_NAME"
 const AWS_WEB_IDENTITY_TOKEN_FILE = "AWS_WEB_IDENTITY_TOKEN_FILE"
-const WEB_IDENTITY_PROVIDER_ID = "WEB_IDENTITY_PROVIDER_ID"
-const WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE = "WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE"
 
 func getWebIdentityDuration() (duration *int32) {
-	webIdentityDuration, hasWebIdentityDuration := os.LookupEnv(WEB_IDENTITY_DURATION)
+	webIdentityDuration, hasWebIdentityDuration := os.LookupEnv(AWS_WEB_IDENTITY_DURATION)
 	if !hasWebIdentityDuration {
 		// Default to 3600
 		return aws.Int32(3600)
@@ -51,7 +51,7 @@ func getWebIdentityDuration() (duration *int32) {
 
 	i64, err := strconv.ParseInt(webIdentityDuration, 10, 32)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid value for %s %s", WEB_IDENTITY_DURATION, webIdentityDuration)
+		fmt.Fprintf(os.Stderr, "Invalid value for %s %s", AWS_WEB_IDENTITY_DURATION, webIdentityDuration)
 	}
 	return aws.Int32(int32(i64))
 }
@@ -110,7 +110,7 @@ func getCredentialsUsingWebIdentityToken() (response *CredentialResponse, err er
 		WebIdentityToken: getWebIdentityToken(),
 		RoleSessionName:  getWebIdentitySessionName(),
 	}
-	web_idenity_provider_id, has_web_identity_provider_id := os.LookupEnv(WEB_IDENTITY_PROVIDER_ID)
+	web_idenity_provider_id, has_web_identity_provider_id := os.LookupEnv(AWS_WEB_IDENTITY_PROVIDER_ID)
 	if has_web_identity_provider_id {
 		input.ProviderId = aws.String(web_idenity_provider_id)
 	}
@@ -142,11 +142,11 @@ func getAwsDir() (awsDir string, err error) {
 }
 
 func getCredsFilename() (filename string) {
-	webIdentityCredentialProcessCacheFile, haswebIdentityCredentialProcessCacheFile := os.LookupEnv(WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE)
+	webIdentityCredentialProcessCacheFile, haswebIdentityCredentialProcessCacheFile := os.LookupEnv(AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE)
 	if !haswebIdentityCredentialProcessCacheFile {
 		dirname, err := getAwsDir()
 		if err != nil {
-			failWithMessage(fmt.Sprintf("Could not get home dir %s and %s not provided.\n", err, WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE))
+			failWithMessage(fmt.Sprintf("Could not get home dir %s and %s not provided.\n", err, AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE))
 		}
 		return fmt.Sprintf("%s/%s", dirname, ".webIdentityCredentialProcess.json")
 	}
