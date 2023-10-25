@@ -13,6 +13,7 @@ export AWS_WEB_IDENTITY_TOKEN_FILE="/path/to/your/token"
 
 Optional environment variables:
 ```sh
+export AWS_ASSUME_WEB_IDENTITY_TIMEOUT=5  # For controlling how long to await assumeRoleWithWebIdentityApiCall (expressed in seconds defaults to 5)
 export AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE="/path/to/file/where/you/want/to/cache/credentials"
 export AWS_WEB_IDENTITY_DURATION=3600
 export AWS_WEB_IDENTITY_PROVIDER_ID="..." # For providers that reqiure specifying that (see AWS docs on assumeRoleWithWebIdentity)

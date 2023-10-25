@@ -40,6 +40,7 @@ const AWS_DEFAULT_REGION = "AWS_DEFAULT_REGION"
 const AWS_ROLE_ARN = "AWS_ROLE_ARN"
 const AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE = "AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_CACHE_FILE"
 const AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_LOG_LEVEL = "AWS_WEB_IDENTITY_CREDENTIAL_PROCESS_LOG_LEVEL"
+const AWS_ASSUME_WEB_IDENTITY_TIMEOUT = "AWS_ASSUME_WEB_IDENTITY_TIMEOUT"
 const AWS_WEB_IDENTITY_DURATION = "AWS_WEB_IDENTITY_DURATION"
 const AWS_WEB_IDENTITY_PROVIDER_ID = "AWS_WEB_IDENTITY_PROVIDER_ID"
 const AWS_WEB_IDENTITY_SESSION_NAME = "AWS_WEB_IDENTITY_SESSION_NAME"
@@ -100,6 +101,20 @@ func getWebIdentityToken() (token *string) {
 	return aws.String(string(byteValue))
 }
 
+func getAwsAssumeWebIdentityTimeoutNs() int64 {
+	timeoutInSeconds := int64(5)
+	awsAssumeWebIdentityTimeout, hasAwsAssumeWebIdentityTimeout := os.LookupEnv(AWS_ASSUME_WEB_IDENTITY_TIMEOUT)
+	if hasAwsAssumeWebIdentityTimeout {
+		awsAssumeWebIdentityTimeoutSeconds, err := strconv.ParseInt(awsAssumeWebIdentityTimeout, 10, 32)
+		if err != nil {
+			log.Warn().Msgf("Invalid value  %s for %s", awsAssumeWebIdentityTimeout, AWS_ASSUME_WEB_IDENTITY_TIMEOUT)
+		} else {
+			timeoutInSeconds = awsAssumeWebIdentityTimeoutSeconds
+		}
+	}
+	return timeoutInSeconds * 1000 * 1000 * 1000
+}
+
 func getCredentialsUsingWebIdentityToken() (response *CredentialResponse, err error) {
 	svc := sts.New(sts.Options{Region: string(getAwsDefaultRegion())})
 	var input *sts.AssumeRoleWithWebIdentityInput
@@ -113,8 +128,12 @@ func getCredentialsUsingWebIdentityToken() (response *CredentialResponse, err er
 	if has_web_identity_provider_id {
 		input.ProviderId = aws.String(web_idenity_provider_id)
 	}
-	ctx, _ := context.WithTimeout(context.TODO(), 5*1000*1000*1000)
+	ctx, _ := context.WithTimeout(context.TODO(), time.Duration(getAwsAssumeWebIdentityTimeoutNs()))
+	log.Debug().Msgf("API Call AssumeRoleWithWebIdentity started")
+	startTimeApiCall := time.Now()
 	result, err := svc.AssumeRoleWithWebIdentity(ctx, input)
+	duration := time.Since(startTimeApiCall)
+	log.Info().Int64("duration_us", duration.Microseconds()).Msgf("API Call AssumeRoleWithWebIdentity finished")
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
@@ -160,6 +179,7 @@ func getCredentialResponse() (response *CredentialResponse, err error) {
 	// First try to read from file but on any exception use api
 	jsonFile, err := os.Open(getCredsFilename())
 	if err != nil {
+		log.Debug().Msgf("Could not get credentials from cache file due to %s", err)
 		return getCredentialsUsingWebIdentityToken()
 	}
 	// defer the closing of our jsonFile so that we can parse it later on
@@ -168,6 +188,7 @@ func getCredentialResponse() (response *CredentialResponse, err error) {
 	err = json.Unmarshal(byteValue, &response)
 	if err != nil {
 		// If we cannot get the cached value get other value
+		log.Debug().Msgf("Could not unmarshal JSON in credential cache file due to %s", err)
 		return getCredentialsUsingWebIdentityToken()
 	}
 	// Check expiry
@@ -177,6 +198,7 @@ func getCredentialResponse() (response *CredentialResponse, err error) {
 		log.Info().Float64("remaining_seconds", remaining_seconds).Msg("Remaining seconds to expiry is too small, will get new credentials.")
 		return getCredentialsUsingWebIdentityToken()
 	}
+	log.Info().Msgf("Credentials for credential_process are retrieved from cache.")
 	return response, nil
 }
 
