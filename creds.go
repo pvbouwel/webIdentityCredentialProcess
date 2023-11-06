@@ -128,7 +128,8 @@ func getCredentialsUsingWebIdentityToken() (response *CredentialResponse, err er
 	if has_web_identity_provider_id {
 		input.ProviderId = aws.String(web_idenity_provider_id)
 	}
-	ctx, _ := context.WithTimeout(context.TODO(), time.Duration(getAwsAssumeWebIdentityTimeoutNs()))
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Duration(getAwsAssumeWebIdentityTimeoutNs()))
+	defer cancel()
 	log.Debug().Msgf("API Call AssumeRoleWithWebIdentity started")
 	startTimeApiCall := time.Now()
 	result, err := svc.AssumeRoleWithWebIdentity(ctx, input)
