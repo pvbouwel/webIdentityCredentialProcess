@@ -1,4 +1,6 @@
 # webIdentityCredentialProcess
+[![Go Report Card](https://goreportcard.com/badge/github.com/pvbouwel/webIdentityCredentialProcess)](https://goreportcard.com/report/github.com/pvbouwel/webIdentityCredentialProcess)
+
 
 A process that allows to perform credential vending based out of token files.
 Credentials are returned in AWS Credential process format on stdout.
