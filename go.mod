@@ -1,4 +1,4 @@
-module webIdentityCredentialProcess
+module github.com/pvbouwel/webIdentityCredentialProcess
 
 go 1.21.3
 
